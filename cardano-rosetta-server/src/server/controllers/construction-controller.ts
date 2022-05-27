@@ -11,12 +11,12 @@ import {
 } from '../utils/data-mapper';
 import { ErrorFactory, ErrorUtils } from '../utils/errors';
 import { withNetworkValidation } from './controllers-helper';
-import { CardanoCli } from '../utils/cardano/cli/cardanonode-cli';
 import { NetworkService } from '../services/network-service';
 import { AddressType } from '../utils/constants';
 import { isAddressTypeValid, isKeyValid } from '../utils/validations';
 import { BlockService } from '../services/block-service';
 import ApiError from '../api-error';
+import { OgmiosClient } from '../utils/cardano/node/ogmios-client';
 
 export interface ConstructionController {
   constructionDerive(
@@ -55,7 +55,7 @@ export interface ConstructionController {
 const configure = (
   constructionService: ConstructionService,
   cardanoService: CardanoService,
-  cardanoCli: CardanoCli,
+  ogmiosClient: OgmiosClient,
   networkService: NetworkService,
   blockService: BlockService
 ): ConstructionController => ({
@@ -277,11 +277,7 @@ const configure = (
           const logger = request.log;
           const [signedTransaction] = await decodeExtraData(request.body.signed_transaction);
           logger.info(`[constructionSubmit] About to submit ${signedTransaction}`);
-          await cardanoCli.submitTransaction(
-            logger,
-            signedTransaction,
-            request.body.network_identifier.network === 'mainnet'
-          );
+          await ogmiosClient.submitTransaction(logger, signedTransaction);
           logger.info('[constructionHash] About to get hash of signed transaction');
           const transactionHash = cardanoService.getHashOfSignedTransaction(logger, signedTransaction);
           // eslint-disable-next-line camelcase

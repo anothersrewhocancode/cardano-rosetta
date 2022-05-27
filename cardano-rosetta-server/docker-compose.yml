@@ -33,6 +33,19 @@ services:
       options:
         max-size: "400k"
         max-file: "20"
+  cardano-node-ogmios:
+    image: cardanosolutions/cardano-node-ogmios:${CARDANO_NODE_OGMIOS_VERSION:-v5.4.0}-${NETWORK:-mainnet}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "400k"
+        max-file: "20"
+    ports:
+      - ${OGMIOS_PORT:-1337}:1337
+    restart: on-failure
+    volumes:
+      - node-db:/db
+      - node-ipc:/ipc
   cardano-db-sync:
     image: inputoutput/cardano-db-sync:${CARDANO_DB_SYNC_VERSION:-13.0.0-rc2}
     command: [
@@ -69,7 +82,6 @@ services:
       target: cardano-rosetta-server
     environment:
       - BIND_ADDRESS=0.0.0.0
-      - CARDANO_CLI_PATH=/usr/local/bin/cardano-cli
       - CARDANO_NODE_PATH=/usr/local/bin/cardano-node
       - CARDANO_NODE_SOCKET_PATH=/node-ipc/node.socket
       - DB_CONNECTION_STRING=postgresql://postgres:notForProduction!@postgres:5432/cexplorer
@@ -79,6 +91,8 @@ services:
       - PAGE_SIZE=30
       - PORT=8080
       - TOPOLOGY_FILE_PATH=/config/cardano-node/topology.json
+      - OGMIOS_HOST=127.0.0.1
+      - OGMIOS_PORT=1337
     expose:
       - 8080
     ports:
