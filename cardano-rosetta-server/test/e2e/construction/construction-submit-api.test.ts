@@ -17,8 +17,7 @@ const generatePayloadWithSignedTransaction = (blockchain: string, network: strin
   signed_transaction: signedTransaction
 });
 
-const ERROR_WHEN_CALLING_CARDANO_CLI = 'Error when calling cardano-cli';
-const ERROR_OUTSIDE_VALIDITY_INTERVAL_UTXO = 'Error when sending the transaction - OutsideValidityIntervalUTxO';
+const ERROR_OUTSIDE_VALIDITY_INTERVAL_UTXO = 'Error when sending the transaction';
 
 describe(CONSTRUCTION_SUBMIT_ENDPOINT, () => {
   let database: Pool;
@@ -83,10 +82,11 @@ describe(CONSTRUCTION_SUBMIT_ENDPOINT, () => {
   });
 
   it('Should return an error if there is a problem when sending the transaction', async () => {
+    const UNKNOWN_ERROR = 'An unknown error happened';
     const mock = ogmiosClientMock.submitTransaction as jest.Mock;
     mock.mockClear();
     mock.mockImplementation(() => {
-      throw new Error(ERROR_WHEN_CALLING_CARDANO_CLI);
+      throw new Error(UNKNOWN_ERROR);
     });
     const response = await server.inject({
       method: 'post',
@@ -102,34 +102,35 @@ describe(CONSTRUCTION_SUBMIT_ENDPOINT, () => {
     expect(response.json()).toEqual({
       code: 5006,
       details: {
-        message: ERROR_WHEN_CALLING_CARDANO_CLI
+        message: UNKNOWN_ERROR
       },
       message: 'Error when sending the transaction',
       retriable: true
     });
   });
 
-  it('Should return an non retriable error if there is OutsideValidityIntervalUTxO error from the node', async () => {
-    const mock = ogmiosClientMock.submitTransaction as jest.Mock;
-    mock.mockClear();
-    mock.mockImplementation(() => {
-      throw ErrorFactory.sendOutsideValidityIntervalUtxoError(ERROR_OUTSIDE_VALIDITY_INTERVAL_UTXO);
-    });
-    const response = await server.inject({
-      method: 'post',
-      url: CONSTRUCTION_SUBMIT_ENDPOINT,
-      payload: generatePayloadWithSignedTransaction(
-        'cardano',
-        'mainnet',
-        CONSTRUCTION_SIGNED_TRANSACTION_WITH_EXTRA_DATA_INVALID_TTL
-      )
-    });
-    expect(response.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
-    expect((ogmiosClientMock.submitTransaction as jest.Mock).mock.calls.length).toBe(1);
-    expect(response.json()).toEqual({
-      code: 4037,
-      message: ERROR_OUTSIDE_VALIDITY_INTERVAL_UTXO,
-      retriable: false
-    });
-  });
+  // TODO:
+  // it('Should return an error with reasons if there is OutsideOfValidityInterval error from the node', async () => {
+  //   const mock = ogmiosClientMock.submitTransaction as jest.Mock;
+  //   mock.mockClear();
+  //   mock.mockImplementation(() => {
+  //     throw ErrorFactory.sendOutsideValidityIntervalUtxoError(ERROR_OUTSIDE_VALIDITY_INTERVAL_UTXO);
+  //   });
+  //   const response = await server.inject({
+  //     method: 'post',
+  //     url: CONSTRUCTION_SUBMIT_ENDPOINT,
+  //     payload: generatePayloadWithSignedTransaction(
+  //       'cardano',
+  //       'mainnet',
+  //       CONSTRUCTION_SIGNED_TRANSACTION_WITH_EXTRA_DATA_INVALID_TTL
+  //     )
+  //   });
+  //   expect(response.statusCode).toEqual(StatusCodes.INTERNAL_SERVER_ERROR);
+  //   expect((ogmiosClientMock.submitTransaction as jest.Mock).mock.calls.length).toBe(1);
+  //   expect(response.json()).toEqual({
+  //     code: 4037,
+  //     message: ERROR_OUTSIDE_VALIDITY_INTERVAL_UTXO,
+  //     retriable: false
+  //   });
+  // });
 });

@@ -9,7 +9,7 @@ import {
   mapAmount,
   mapToConstructionHashResponse
 } from '../utils/data-mapper';
-import { ErrorFactory, ErrorUtils } from '../utils/errors';
+import { ErrorFactory, Errors } from '../utils/errors';
 import { withNetworkValidation } from './controllers-helper';
 import { NetworkService } from '../services/network-service';
 import { AddressType } from '../utils/constants';
@@ -279,14 +279,26 @@ const configure = (
           logger.info(`[constructionSubmit] About to submit ${signedTransaction}`);
           await ogmiosClient.submitTransaction(logger, signedTransaction);
           logger.info('[constructionHash] About to get hash of signed transaction');
-          const transactionHash = cardanoService.getHashOfSignedTransaction(logger, signedTransaction);
-          // eslint-disable-next-line camelcase
-          return { transaction_identifier: { hash: transactionHash } };
+          const hash = cardanoService.getHashOfSignedTransaction(logger, signedTransaction);
+          return { transaction_identifier: { hash } };
         } catch (error) {
           request.log.error(error);
-          return ErrorUtils.resolveApiErrorFromNodeError(error.message)
-            .then((mappedError: ApiError) => mappedError)
-            .catch(() => ErrorFactory.sendTransactionError(error.message));
+          if (Array.isArray(error)) {
+            const { code, message } = Errors.SEND_TRANSACTION_ERROR;
+            throw new ApiError(
+              code,
+              message,
+              false,
+              undefined,
+              // eslint-disable-next-line unicorn/prevent-abbreviations
+              error.map(err => ({
+                name: err.name,
+                details: JSON.parse(err.message)
+              }))
+            );
+          } else {
+            throw ErrorFactory.sendTransactionError(error.message);
+          }
         }
       },
       request.log,
