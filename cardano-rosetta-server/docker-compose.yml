@@ -34,7 +34,7 @@ services:
         max-size: "400k"
         max-file: "20"
   cardano-node-ogmios:
-    image: cardanosolutions/cardano-node-ogmios:${CARDANO_NODE_OGMIOS_VERSION:-v5.4.0}-${NETWORK:-mainnet}
+    image: cardanosolutions/cardano-node-ogmios:${CARDANO_NODE_OGMIOS_VERSION:-v5.5.0-rc1}-${NETWORK:-mainnet}
     logging:
       driver: "json-file"
       options:
@@ -66,7 +66,7 @@ services:
       - postgres_db
     volumes:
       - ../config/network/${NETWORK:-mainnet}:/config
-      - db-sync-data:/data
+      - db-sync-data:/var/lib/cexplorer
       - node-ipc:/node-ipc
     restart: on-failure
     logging:
