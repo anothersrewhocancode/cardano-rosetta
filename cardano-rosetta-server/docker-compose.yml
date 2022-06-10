@@ -20,19 +20,7 @@ services:
       driver: "json-file"
       options:
         max-size: "200k"
-        max-file: "10"
-  cardano-node:
-    image: inputoutput/cardano-node:${CARDANO_NODE_VERSION:-1.35.0-rc2}
-    environment:
-      - NETWORK=${NETWORK:-mainnet}
-    volumes:
-      - node-db:/data/db
-      - node-ipc:/ipc
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "400k"
-        max-file: "20"
+        max-file: "10"       
   cardano-node-ogmios:
     image: cardanosolutions/cardano-node-ogmios:${CARDANO_NODE_OGMIOS_VERSION:-v5.5.0-rc1}-${NETWORK:-mainnet}
     logging:
@@ -58,7 +46,7 @@ services:
       - RESTORE_SNAPSHOT=${RESTORE_SNAPSHOT:-}
       - RESTORE_RECREATE_DB=N
     depends_on:
-      - cardano-node
+      - cardano-node-ogmios
       - postgres
     secrets:
       - postgres_password
