@@ -379,6 +379,7 @@ const parsePoolRetirementRow = (
  */
 const parseVoteRow = (transaction: PopulatedTransaction, metadata: FindTransactionMetadata): PopulatedTransaction => {
   const { data, signature } = metadata;
+  console.log(data, signature)
   if (isVoteDataValid(data) && isVoteSignatureValid(signature)) {
     const votingKey = remove0xPrefix(data[CatalystDataIndexes.VOTING_KEY]);
     const stakeKey = remove0xPrefix(data[CatalystDataIndexes.STAKE_KEY]);
