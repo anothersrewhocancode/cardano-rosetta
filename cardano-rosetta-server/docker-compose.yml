@@ -80,7 +80,7 @@ services:
       - PORT=8080
       - TOPOLOGY_FILE_PATH=/config/cardano-node/topology.json
       - OGMIOS_HOST=127.0.0.1
-      - OGMIOS_PORT=1337
+      - OGMIOS_PORT=1338
     expose:
       - 8080
     ports:
